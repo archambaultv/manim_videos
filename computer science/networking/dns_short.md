@@ -35,7 +35,8 @@ distinct. Au collège par exemple, omnivox.cmaisonneuve.qc.ca pourrait avoir une
 adresse IP différente de celle du site web principal.
 
 Enfin, lorsque le serveur récursif obtient l’adresse IP du site recherché il la
-retransmet à votre ordinateur.
+retransmet à votre ordinateur et ce dernier peut alors établir une connexion
+avec le serveur du Collège.
 
 # Résumé
 En résumé, l’organisation des DNS est pyramidale : au sommet, les serveurs
