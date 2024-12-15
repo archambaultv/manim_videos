@@ -159,8 +159,13 @@ class DNS(m.Scene):
         """
         Add a DNS request to the self.
         """
-        dns = computer().scale(computer_scale)
-        dns.next_to(maisonneuve, m.UP, buff=2)
+        first_time = False
+        if self.dns_server is None:
+            first_time = True
+            self.dns_server = computer().scale(computer_scale)
+            self.dns_server.next_to(maisonneuve, m.UP, buff=2)
+
+        dns = self.dns_server
         dns_ip = m.Tex(dns_address,
                        tex_template=myLaTeX)
         dns_ip.next_to(dns, m.DOWN)
@@ -176,7 +181,10 @@ class DNS(m.Scene):
                              tex_template=myLaTeX)
         response_tex.next_to(arrow_out, m.DOWN)
 
-        self.play(m.FadeIn(dns, dns_ip), run_time=2)
+        if first_time:
+            self.play(m.FadeIn(dns, dns_ip), run_time=2)
+        else:
+            self.play(m.FadeIn(dns_ip), run_time=2)
         self.play(m.GrowArrow(arrow_in))
         self.play(m.FadeIn(request_tex))
 
@@ -185,6 +193,6 @@ class DNS(m.Scene):
         self.play(m.FadeIn(response_tex))
 
         self.wait(2)
-        self.play(m.FadeOut(dns, dns_ip, arrow_in, request_tex, arrow_out, response_tex))
+        self.play(m.FadeOut(dns_ip, arrow_in, request_tex, arrow_out, response_tex))
 
         self.wait(2)
