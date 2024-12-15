@@ -1,13 +1,14 @@
 import manim as m
 
-
+# Global script parameters
+computer_scale = 0.3
 myLaTeX = m.TexTemplate()
-myLaTeX.add_to_preamble(r"\usepackage[T1]{fontenc}")
+myLaTeX.add_to_preamble(r"\usepackage[T1]{fontenc} \usepackage{fontawesome}")
 
 
 def computer() -> m.VGroup:
     """
-    Return a VObject representing a computer.
+    Return a VGroup representing a computer.
     """
     screen = m.RoundedRectangle(width=4, height=3, corner_radius=0.1)
     # Add cursor to the screen
@@ -36,9 +37,11 @@ def computer() -> m.VGroup:
 
 
 class DNS(m.Scene):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.dns_server = None
+
     def construct(self):
-        myLaTeX = m.TexTemplate()
-        myLaTeX.add_to_preamble(r"\usepackage[T1]{fontenc} \usepackage{fontawesome}")
         title = m.Tex("Système de nom de domaine (DNS)",
                       tex_template=myLaTeX)
 
@@ -48,19 +51,140 @@ class DNS(m.Scene):
         self.play(m.FadeOut(title))
 
         # Display user and maisonneuve
-        user = computer().scale(0.5)
-        user.shift(m.LEFT * 3)
+        user, user_ip, maisonneuve, maisonneuve_ip = self.create_user_and_maisonneuve()
+        self.play(m.FadeIn(user, user_ip, maisonneuve, maisonneuve_ip), run_time=2)
+        self.wait(2)
+
+        # Display recursive resolver
+        recursive, recursive_ip = self.recursive_resolver(user=user)
+
+        # Display root server
+        self.add_dns_request(recursive=recursive,
+                             maisonneuve=maisonneuve,
+                             request=".ca ?",
+                             response="185.159.196.2",
+                             dns_address=r"{\faGlobe} 192.203.230.10")
+
+        # Top level domain server
+        self.add_dns_request(recursive=recursive,
+                             maisonneuve=maisonneuve,
+                             request="cmaisonneuve.qc.ca ?",
+                             response="162.219.54.2",
+                             dns_address=r"{\faGlobe} 185.159.196.2")
+
+        # Authoritative server
+        self.add_dns_request(recursive=recursive,
+                             maisonneuve=maisonneuve,
+                             request="www.cmaisonneuve.qc.ca ?",
+                             response="151.101.2.133",
+                             dns_address=r"{\faGlobe} 162.219.54.2")
+
+        # Transmit the IP address to the user
+        arrow = m.Arrow(start=recursive_ip.get_corner(m.DOWN),
+                        end=user.get_corner(m.UP))
+        ip_address = m.Tex("151.101.2.133",
+                           tex_template=myLaTeX)
+        ip_address.next_to(arrow, m.RIGHT)
+        self.play(m.GrowArrow(arrow))
+        self.play(m.FadeIn(ip_address))
+        self.wait(2)
+        self.play(m.FadeOut(recursive, recursive_ip, arrow, ip_address))
+
+        # Change ??? to the IP address
+        maisonneuve_new_ip = m.Tex(r"{\faUniversity} ",
+                                   "151.101.2.133",
+                                   tex_template=myLaTeX)
+        maisonneuve_new_ip.move_to(maisonneuve_ip.get_center())
+        arrow2 = m.Arrow(start=user.get_corner(m.RIGHT),
+                         end=maisonneuve.get_corner(m.LEFT))
+        self.play(m.Transform(maisonneuve_ip, maisonneuve_new_ip))
+        self.wait(2)
+        self.play(m.GrowArrow(arrow2))
+
+    def create_user_and_maisonneuve(self):
+        user = computer().scale(computer_scale)
+        user.shift(m.LEFT * 4 + m.DOWN)
         user_ip = m.Tex(r"{\faUser} 192.168.1.15", tex_template=myLaTeX)
         user_ip.next_to(user, m.DOWN)
 
-        maisonneuve = computer().scale(0.5)
-        maisonneuve.shift(m.RIGHT * 3)
-        maisonneuve_ip = m.Tex(r"{\faUniversity} ???.???.???.???",
-                               color=m.RED,
+        maisonneuve = computer().scale(computer_scale)
+        maisonneuve.shift(m.RIGHT * 4 + m.DOWN)
+        maisonneuve_ip = m.Tex(r"{\faUniversity} ", "???.???.???.???",
                                tex_template=myLaTeX)
+        maisonneuve_ip.set_color_by_tex("???", m.RED)
         maisonneuve_ip.next_to(maisonneuve, m.DOWN)
+        return user, user_ip, maisonneuve, maisonneuve_ip
 
-        arrow = m.Arrow(start=user.get_corner(m.RIGHT), end=maisonneuve.get_corner(m.LEFT))
-        self.play(m.FadeIn(user, user_ip, maisonneuve, maisonneuve_ip), run_time=2)
-        self.play(m.GrowArrow(arrow))
+    def recursive_resolver(self, *, user: m.VGroup):
+        recursive = computer().scale(computer_scale)
+        recursive.next_to(user, m.UP, buff=2)
+        recursive_ip = m.Tex(r"{\faServer} ", "1.1.1.1",
+                             tex_template=myLaTeX)
+        recursive_ip.next_to(recursive, m.DOWN)
+
+        arrow2 = m.Arrow(start=user.get_corner(m.UP), end=recursive_ip.get_corner(m.DOWN))
+        address = ["www", ".",
+                   "cmaisonneuve", ".",
+                   "qc", ".",
+                   "ca"]
+        request2 = m.Tex(*address, " ?",
+                         tex_template=myLaTeX)
+        request2.next_to(arrow2, m.RIGHT)
+
+        self.play(m.FadeIn(recursive, recursive_ip), run_time=2)
+        self.play(m.GrowArrow(arrow2))
+        self.play(m.FadeIn(request2))
+
+        self.wait(2)
+        request2[6].set_color(m.GREEN)
+        self.wait(2)
+        request2[4].set_color(m.GREEN)
+        self.wait(2)
+        request2[2].set_color(m.GREEN)
+        self.wait(2)
+        request2[0].set_color(m.GREEN)
+        self.wait(2)
+        request2.set_color(m.WHITE)
+        self.play(m.FadeOut(request2, arrow2))
+        self.wait(2)
+        return recursive, recursive_ip
+
+    def add_dns_request(self,
+                        *,
+                        recursive: m.VGroup,
+                        maisonneuve: m.VGroup,
+                        request: str,
+                        response: str,
+                        dns_address: str):
+        """
+        Add a DNS request to the self.
+        """
+        dns = computer().scale(computer_scale)
+        dns.next_to(maisonneuve, m.UP, buff=2)
+        dns_ip = m.Tex(dns_address,
+                       tex_template=myLaTeX)
+        dns_ip.next_to(dns, m.DOWN)
+        arrow_in = m.Arrow(start=recursive.get_corner(m.UR),
+                           end=dns.get_corner(m.UL))
+        request_tex = m.Tex(request,
+                            tex_template=myLaTeX)
+        request_tex.next_to(arrow_in, m.UP)
+
+        arrow_out = m.Arrow(start=dns.get_corner(m.DL),
+                            end=recursive.get_corner(m.DR))
+        response_tex = m.Tex(response,
+                             tex_template=myLaTeX)
+        response_tex.next_to(arrow_out, m.DOWN)
+
+        self.play(m.FadeIn(dns, dns_ip), run_time=2)
+        self.play(m.GrowArrow(arrow_in))
+        self.play(m.FadeIn(request_tex))
+
+        self.wait(2)
+        self.play(m.GrowArrow(arrow_out))
+        self.play(m.FadeIn(response_tex))
+
+        self.wait(2)
+        self.play(m.FadeOut(dns, dns_ip, arrow_in, request_tex, arrow_out, response_tex))
+
         self.wait(2)
