@@ -1,17 +1,19 @@
 # Introduction
-Bonjour à tous. Dans cette vidéo, nous allons voir le fonctionnement du
-protocole DNS (Domain Name System). Nous examinerons à quoi il sert et comment
-il fonctionne. En français, DNS se traduit par « système de nom de domaine ».
+Bonjour à tous. Dans cette vidéo, nous allons explorer le fonctionnement du
+système de nom de domaine, plus connu sous l'acronyme DNS pour Domain Name
+System en anglais. Nous verrons à quoi il sert et comment il fonctionne.
 
-Les ordinateurs communiquent via des adresses IP. Pour accéder par exemple à
-www.cmaisonneuve.qc.ca, votre ordinateur doit connaître son adresse IP. Le DNS
-permet précisément de trouver cette adresse à partir du nom de domaine. C'est en
-quelque sorte un annuaire. 
+Imagnier que vous voulez accéder au site web du Collège de Maisonneuve. Votre
+ordinateur, représenté en bas à gauche dans l'écran doit donc connaître
+l'adresse IP du serveur. Ce dernier est représenté en bas à droite dans l'écran.
+C'est précisément le protocole DNS qui permet de faire le lien entre le nom de
+demaine www.cmaisonneuve.qc.ca et l'adresse IP du serveur.
 
 # Serveur récursif
-Ainsi, si votre ordinateur ne connaît pas l’adresse IP du Collège, il interroge
-un serveur DNS appelé « serveur récursif ». Chaque ordinateur connaît l’adresse
-IP d’un serveur récursif, souvent celui de son fournisseur d’accès Internet.
+Ainsi, si votre ordinateur ne connaît pas déjà l’adresse IP du Collège, il
+interroge un serveur DNS appelé « serveur récursif ». Chaque ordinateur connecté
+à un réseau connaît nécessairement l’adresse IP d’un serveur récursif. Souvent,
+ce dernier est gérer par votre fournisseur d'accès Internet.
 
 Pour déterminer l’adresse IP, le serveur récursif lit le nom de domaine de
 droite à gauche. Chaque partie (.ca, .qc.ca, cmaisonneuve.qc.ca, etc.) est gérée
@@ -29,10 +31,12 @@ niveau gère également certains domaines de second niveau comme par exemple
 
 Maintenant que le serveur récursif connaît l’adresse du serveur DNS de
 cmaisonneuve.qc.ca, ce dernier lui fournit l'adresse IP du sous-domaine
-www.cmaisonneuve.qc.ca. Il est important de comprendre que chaque sous-domaine
-peut avoir une adresse IP distincte, car il peut être hébergé sur un serveur
-distinct. Au collège par exemple, omnivox.cmaisonneuve.qc.ca pourrait avoir une
-adresse IP différente de celle du site web principal.
+www.cmaisonneuve.qc.ca. Le serveur capable de donner l'adresse IP d'un domaine
+est appelé serveur faisant autorité. Aussi, il est important de comprendre que
+chaque sous-domaine peut avoir une adresse IP distincte, car il peut être
+hébergé sur un serveur distinct. Au collège par exemple,
+omnivox.cmaisonneuve.qc.ca pourrait avoir une adresse IP différente de celle du
+site web principal.
 
 Enfin, lorsque le serveur récursif obtient l’adresse IP du site recherché il la
 retransmet à votre ordinateur et ce dernier peut alors établir une connexion

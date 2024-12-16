@@ -61,13 +61,18 @@ class DNS(m.Scene):
         title = m.Tex("Système de nom de domaine (DNS)",
                       tex_template=myLaTeX)
         self.play(m.FadeIn(title), run_time=2)
-        self.wait(2)
+        self.wait(12)
         self.play(m.FadeOut(title))
 
         # Display user and maisonneuve
         user, user_ip, maisonneuve, maisonneuve_ip = self.create_user_and_maisonneuve()
+        s = myTex("www.cmaisonneuve.qc.ca ?")
+        s.next_to(user, m.RIGHT, buff=1)
         self.play(m.FadeIn(user, user_ip, maisonneuve, maisonneuve_ip), run_time=2)
-        self.wait(2)
+        self.wait(10)
+        self.play(m.FadeIn(s))
+        self.wait(8)
+        self.play(m.FadeOut(s))
 
         # Display recursive resolver
         recursive, recursive_ip, recursive_name = self.recursive_resolver(user=user)
@@ -171,6 +176,7 @@ class DNS(m.Scene):
         request2.shift(m.UP * 0.4 + m.LEFT * 0.4)
 
         self.play(m.FadeIn(recursive, recursive_ip, recursive_name), run_time=2)
+        self.wait(10)
         self.play(m.GrowArrow(arrow2))
         self.play(m.FadeIn(request2))
 
