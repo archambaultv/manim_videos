@@ -73,18 +73,20 @@ class DNS(m.Scene):
         recursive, recursive_ip, recursive_name = self.recursive_resolver(user=user)
 
         # Display dns server
-        root, root_name = self.add_root_dns(
+        root, root_name, root_response = self.add_root_dns(
                           recursive=recursive,
                           request=".ca ?",
                           response="185.159.196.2",
                           dns_address=r"{\faGlobe} 192.203.230.10")
-        tld, tld_name = self.add_tld_dns(
+        tld, tld_name, tld_response = self.add_tld_dns(
                          recursive=recursive,
+                         previous_response=root_response,
                          request="cmaisonneuve.qc.ca ?",
                          response="162.219.54.2",
                          dns_address=r"{\faGlobe} 185.159.196.2")
-        auth, auth_name = self.add_authoritative_dns(
+        auth, auth_name, auth_response = self.add_authoritative_dns(
                                    recursive=recursive,
+                                   previous_response=tld_response,
                                    request="www.cmaisonneuve.qc.ca ?",
                                    response="151.101.2.133",
                                    dns_address=r"{\faGlobe} 162.219.54.2")
@@ -99,10 +101,10 @@ class DNS(m.Scene):
         ip_address.next_to(arrow, m.ORIGIN)
         ip_address.shift(m.UP * 0.4 + m.LEFT * 0.4)
         self.play(m.GrowArrow(arrow))
-        self.play(m.FadeIn(ip_address))
+        self.play(m.ReplacementTransform(auth_response, ip_address))
         self.wait(2)
 
-        self.play(m.FadeOut(arrow, ip_address, recursive_ip),
+        self.play(m.FadeOut(arrow, recursive_ip),
                   recursive.animate.set_opacity(old_dns_opacity),
                   recursive_name.animate.set_opacity(old_dns_opacity))
 
@@ -113,7 +115,8 @@ class DNS(m.Scene):
         arrow2 = m.Arrow(start=user.get_corner(m.RIGHT),
                          end=maisonneuve.get_corner(m.LEFT))
         arrow2.color = m.BLUE
-        self.play(m.Transform(maisonneuve_ip, maisonneuve_new_ip))
+        self.play(m.ReplacementTransform(ip_address, maisonneuve_new_ip),
+                  m.FadeOut(maisonneuve_ip))
         self.wait(2)
         self.play(m.GrowArrow(arrow2))
         self.wait(2)
@@ -180,7 +183,6 @@ class DNS(m.Scene):
         self.wait(2)
         request2[0].set_color(m.GREEN)
         self.wait(2)
-        request2.set_color(m.WHITE)
         self.play(m.FadeOut(request2, arrow2))
         self.wait(2)
         return recursive, recursive_ip, recursive_name
@@ -225,10 +227,11 @@ class DNS(m.Scene):
 
         self.add_dns(dns, dns_name, dns_ip, arrow_in, request_tex, arrow_out, response_tex)
 
-        return (dns, dns_name)
+        return (dns, dns_name, response_tex)
 
     def add_tld_dns(self,
                     *,
+                    previous_response: m.Tex,
                     recursive: m.VGroup,
                     request: str,
                     response: str,
@@ -260,12 +263,14 @@ class DNS(m.Scene):
         response_tex.color = m.YELLOW
         response_tex.next_to(arrow_out, m.LEFT)
 
-        self.add_dns(dns, dns_name, dns_ip, arrow_in, request_tex, arrow_out, response_tex)
+        self.add_dns(dns, dns_name, dns_ip, arrow_in, request_tex, arrow_out, response_tex,
+                     previous_response)
 
-        return (dns, dns_name)
+        return (dns, dns_name, response_tex)
 
     def add_authoritative_dns(self,
                               *,
+                              previous_response: m.Tex,
                               recursive: m.VGroup,
                               request: str,
                               response: str,
@@ -303,12 +308,17 @@ class DNS(m.Scene):
         response_tex.next_to(arrow_out, m.ORIGIN)
         response_tex.shift(m.DOWN * 0.25 + m.RIGHT * 0.25)
 
-        self.add_dns(dns, dns_name, dns_ip, arrow_in, request_tex, arrow_out, response_tex)
+        self.add_dns(dns, dns_name, dns_ip, arrow_in, request_tex, arrow_out, response_tex,
+                     previous_response)
 
-        return (dns, dns_name)
+        return (dns, dns_name, response_tex)
 
-    def add_dns(self, dns, dns_name, dns_ip, arrow_in, request_tex, arrow_out, response_tex):
-        self.play(m.FadeIn(dns, dns_name, dns_ip), run_time=2)
+    def add_dns(self, dns, dns_name, dns_ip, arrow_in, request_tex, arrow_out, response_tex,
+                previous_response=None):
+        if previous_response is not None:
+            self.play(m.FadeIn(dns, dns_name), m.ReplacementTransform(previous_response, dns_ip))
+        else:
+            self.play(m.FadeIn(dns, dns_name, dns_ip))
         self.play(m.GrowArrow(arrow_in))
         self.play(m.FadeIn(request_tex))
 
@@ -317,7 +327,7 @@ class DNS(m.Scene):
         self.play(m.FadeIn(response_tex))
 
         self.wait(2)
-        self.play(m.FadeOut(arrow_in, request_tex, arrow_out, response_tex, dns_ip),
+        self.play(m.FadeOut(arrow_in, request_tex, arrow_out, dns_ip),
                   dns_name.animate.set_opacity(old_dns_opacity),
                   dns.animate.set_opacity(old_dns_opacity))
         self.wait(2)
